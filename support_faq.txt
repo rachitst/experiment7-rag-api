@@ -1,0 +1,38 @@
+Order Tracking
+Customers can view shipment updates in the Orders section of their NestBasket account. A tracking link and the courier name are shown once an order is dispatched, which usually happens within 1 to 2 business days of payment. If tracking has not updated for 48 hours, contact support with the order reference. The assistant cannot access live order status or courier systems.
+
+Delivery Times and Shipping Charges
+Standard delivery takes 3 to 6 business days in metro cities and 5 to 9 business days in other locations. Express delivery, where available, takes 1 to 2 business days and is offered at checkout. Orders above Rs. 499 ship free; smaller orders carry a shipping charge of Rs. 49. Delivery dates shown at checkout are estimates, not guarantees.
+
+Cancelling an Order
+An order can be cancelled from the Orders section until it is dispatched. Once an order has been dispatched it cannot be cancelled, but it can be returned after delivery if the item is eligible for return. Refunds for cancelled prepaid orders follow the same timeline as refunds for returns.
+
+Returns and Refunds
+Unused items in their original packaging may be requested for return within 15 days of delivery. To start a return, open Orders, choose the item, and select Return Request. A pickup is scheduled after the request is accepted. After an approved return is received at the warehouse, a refund is usually processed to the original payment method within 5 to 7 business days. Cash-on-delivery orders are refunded to a bank account added by the customer. The assistant cannot approve a refund or promise a refund date.
+
+Items That Cannot Be Returned
+Some items cannot be returned: opened personal-care products, innerwear, perishable groceries, gift cards, and software or digital downloads. The product page states whether an item is non-returnable.
+
+Damaged, Defective or Wrong Items
+If an item arrives damaged, defective, or different from what was ordered, report it from the Orders section within 48 hours of delivery and attach photos of the item and the packaging. A replacement is offered if stock is available; otherwise a full refund is issued after the item is inspected.
+
+Account Access
+If you cannot sign in, use the Forgot Password option on the sign-in page. Check your email for the password reset link, which expires after 30 minutes. If the email does not arrive, check the spam folder and confirm that you entered the registered email address. After five failed sign-in attempts the account is locked for 30 minutes. Never share your password or one-time verification code with anyone, including NestBasket support staff.
+
+Updating Account Details
+Your name, phone number, and saved addresses can be changed under Account Settings. Changing the registered email address requires a one-time code sent to both the old and the new address. The delivery address of an order cannot be changed after the order has been dispatched.
+
+Billing and Payments
+NestBasket accepts UPI, debit and credit cards, net banking, and cash on delivery for orders up to Rs. 10,000. Payment status is shown in the order details. If a payment appears to have been charged twice, do not submit repeated payments. Duplicate charges are usually reversed automatically by the bank within 5 to 7 business days; if not, contact the billing support team with the transaction date and order reference. Do not share full card numbers, CVV codes, or UPI PINs.
+
+Invoices
+A GST invoice can be downloaded from the order details page after the order has been delivered. The invoice is issued in the name and billing address entered at checkout and cannot be edited after delivery.
+
+Warranty
+Electronics carry the manufacturer's warranty stated on the product page. Warranty claims are handled by the brand's authorised service centre, so keep the invoice as proof of purchase. NestBasket does not sell extended warranty plans.
+
+Technical Support
+If the website or app is not loading, refresh the page, check your internet connection, and use an updated browser or the latest version of the app. If the problem continues, clear the browser cache or try a private window. When contacting support, describe the error message and the steps that led to it. Do not share passwords or verification codes.
+
+Contact Support
+For an issue that is not covered by these FAQs, contact the support team through the Help section of the website or app. Live chat is available from 9 AM to 9 PM every day, and email replies usually arrive within 24 hours. Include a brief description and the relevant order reference, but do not send passwords, one-time codes, or full payment-card details.
