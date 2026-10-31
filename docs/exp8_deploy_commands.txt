@@ -1,0 +1,56 @@
+# Experiment 8 — deployment transcript (Groq key masked as gsk_****)
+LOCATION=centralindia  RG=rg-exp7-rag-api  ACR=acrexp7rag5973  ENV_NAME=cae-exp7-rag-api  APP=exp7-rag-api
+
+$ az group create -n $RG -l $LOCATION
+Name             Location      State
+rg-exp7-rag-api  centralindia  Succeeded
+
+$ az acr create -n $ACR -g $RG --sku Basic --admin-enabled false
+Name            LoginServer                Sku    Admin    Location
+acrexp7rag5973  acrexp7rag5973.azurecr.io  Basic  False    centralindia
+
+$ az acr build -r $ACR -t exp7-rag-api:v1 .
+ERROR: (TasksOperationsNotAllowed) ACR Tasks requests for the registry acrexp7rag5973 ... are not permitted.
+# -> ACR Tasks are blocked on Azure for Students; image built locally and pushed with Entra ID login instead:
+
+$ docker build -t exp7-rag-api .                                 # 891 s
+$ az acr login -n $ACR                                           # Entra ID token, no admin password
+Login Succeeded
+$ docker tag exp7-rag-api $ACR.azurecr.io/exp7-rag-api:v1
+$ docker push $ACR.azurecr.io/exp7-rag-api:v1                    # 1st try: 416 on one layer after 1295 s; retry 490 s
+v1: digest: sha256:0b6e49a39304a458970d0d220580ecc94545f4ce1848d50991951af6bdd51f90 size: 856
+
+$ az acr repository show-tags -n $ACR --repository exp7-rag-api -o table
+Result
+--------
+v1
+
+$ az containerapp env create -n $ENV_NAME -g $RG -l $LOCATION --environment-mode WorkloadProfiles \
+    --logs-workspace-id <workspace customerId> --logs-workspace-key <workspace key>
+# (default create produced an "Express" environment, which rejects --registry-identity system:
+#  ExpressEnvironmentFeatureNotSupported -> recreated in WorkloadProfiles mode, Consumption profile, same workspace)
+State      Mode              Domain
+Succeeded  WorkloadProfiles  politefield-e1a38991.centralindia.azurecontainerapps.io
+
+$ az containerapp create -n $APP -g $RG --environment $ENV_NAME \
+    --image $ACR.azurecr.io/exp7-rag-api:v1 \
+    --registry-server $ACR.azurecr.io --registry-identity system \
+    --target-port 8000 --ingress external \
+    --cpu 1.0 --memory 2.0Gi --min-replicas 0 --max-replicas 2 \
+    --env-vars LLM_BACKEND=openai_compatible LLM_BASE_URL=https://api.groq.com/openai/v1 \
+      LLM_MODEL=openai/gpt-oss-20b LLM_TIMEOUT_SECONDS=30 LLM_MAX_TOKENS=300 RAG_TOP_K=3 RAG_MAX_DISTANCE=1.5
+  state: Succeeded   identity: SystemAssigned   cpu: 1.0   memory: 2Gi   replicas: 0..2
+  registries: [{server: acrexp7rag5973.azurecr.io, identity: system, username: "", passwordSecretRef: ""}]
+
+$ az containerapp secret set -n $APP -g $RG --secrets llm-api-key=gsk_****
+$ az containerapp update -n $APP -g $RG --set-env-vars LLM_API_KEY=secretref:llm-api-key
+$ az containerapp secret list -n $APP -g $RG -o table
+Name
+-----------
+llm-api-key
+
+$ URL=https://$(az containerapp show -n $APP -g $RG --query properties.configuration.ingress.fqdn -o tsv); echo $URL
+https://exp7-rag-api.politefield-e1a38991.centralindia.azurecontainerapps.io
+
+$ history | grep -c gsk_
+0

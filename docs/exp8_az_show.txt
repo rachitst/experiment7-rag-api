@@ -1,0 +1,31 @@
+$ az containerapp show -n exp7-rag-api -g rg-exp7-rag-api -o table
+Name          Location       ResourceGroup    Fqdn
+------------  -------------  ---------------  --------------------------------------------------------------------
+exp7-rag-api  Central India  rg-exp7-rag-api  exp7-rag-api.politefield-e1a38991.centralindia.azurecontainerapps.io
+
+$ az containerapp revision list -n exp7-rag-api -g rg-exp7-rag-api -o table
+CreatedTime                Active    Replicas    TrafficWeight    HealthState    ProvisioningState    Name
+-------------------------  --------  ----------  ---------------  -------------  -------------------  ---------------------
+2026-10-31T10:10:58+00:00  True      1           100              Healthy        Provisioned          exp7-rag-api--0000004
+
+$ az containerapp revision list -n exp7-rag-api -g rg-exp7-rag-api --all -o table   # full history
+Name                   Created                    Active    Replicas    Traffic    Health
+---------------------  -------------------------  --------  ----------  ---------  --------
+exp7-rag-api--nnyoskj  2026-10-31T10:05:22+00:00  False     0           0          Healthy
+exp7-rag-api--0000001  2026-10-31T10:05:46+00:00  False     0           0          Healthy
+exp7-rag-api--0000002  2026-10-31T10:06:40+00:00  False     0           0          Healthy
+exp7-rag-api--0000003  2026-10-31T10:08:59+00:00  False     0           0          Healthy
+exp7-rag-api--0000004  2026-10-31T10:10:58+00:00  True      1           100        Healthy
+
+$ az acr repository show-tags -n acrexp7rag5973 --repository exp7-rag-api -o table
+Result
+--------
+v1
+
+$ az resource list -g rg-exp7-rag-api -o table
+Name                        ResourceGroup    Location      Type                                      Status
+--------------------------  ---------------  ------------  ----------------------------------------  ---------
+acrexp7rag5973              rg-exp7-rag-api  centralindia  Microsoft.ContainerRegistry/registries    Succeeded
+workspace-rgexp7ragapi4Rj0  rg-exp7-rag-api  centralindia  Microsoft.OperationalInsights/workspaces  Succeeded
+cae-exp7-rag-api            rg-exp7-rag-api  centralindia  Microsoft.App/managedEnvironments         Succeeded
+exp7-rag-api                rg-exp7-rag-api  centralindia  Microsoft.App/containerApps               Succeeded

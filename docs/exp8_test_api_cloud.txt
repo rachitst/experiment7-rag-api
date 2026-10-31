@@ -1,0 +1,10 @@
+$ python test_api.py https://exp7-rag-api.politefield-e1a38991.centralindia.azurecontainerapps.io
+Target: https://exp7-rag-api.politefield-e1a38991.centralindia.azurecontainerapps.io
+
+Test case                          Expected                         Pass   Client ms  Server ms  Actual
+Health endpoint                    200, status ok                   PASS       138.8        0.7  200, ok
+Supported question                 200, answered                    PASS       717.6      594.4  200, answered: You have 15 days from the delivery date to return an unused item in it
+Unsupported question               200, insufficient_information    PASS        88.7        9.3  200, insufficient_information
+Empty question                     422 validation error             PASS        89.8        2.0  422, invalid_request
+Too-long question (1,001 chars)    422 validation error             PASS        69.9        1.2  422, invalid_request
+[exit code 0]

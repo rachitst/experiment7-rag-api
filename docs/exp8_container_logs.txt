@@ -1,0 +1,26 @@
+$ az containerapp logs show -n exp7-rag-api -g rg-exp7-rag-api --type console --tail 100
+2026-10-31T10:12:36.84523  Connecting to the container 'exp7-rag-api'...
+2026-10-31T10:12:36.98913  Successfully Connected to container: 'exp7-rag-api' [Revision: 'exp7-rag-api--0000004', Replica: 'exp7-rag-api--0000004-6644755d89-gndnx']
+2026-10-31T10:11:22.0492526Z stderr F INFO:     Started server process [1]
+2026-10-31T10:11:22.0492878Z stderr F INFO:     Waiting for application startup.
+2026-10-31T10:11:22.0497560Z stderr F 2026-10-31 10:11:22,049 INFO support_api.app startup config={'llm_backend': 'openai_compatible', 'llm_base_url': 'https://api.groq.com/openai/v1', 'llm_model': 'openai/gpt-oss-20b', 'api_key_configured': True, 'embedding_model': 'sentence-transformers/all-MiniLM-L6-v2', 'chunk_size': 450, 'chunk_overlap': 60, 'top_k': 3, 'max_distance': 1.5, 'llm_timeout_s': 30.0, 'llm_max_tokens': 300}
+2026-10-31T10:11:27.8806450Z stderr F 
+2026-10-31T10:11:27.9353249Z stderr F Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]
+2026-10-31T10:11:27.9353600Z stderr F Loading weights: 100%|██████████| 103/103 [00:00<00:00, 3071.94it/s]
+2026-10-31T10:11:28.6198409Z stderr F Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-10-31T10:11:29.2330013Z stderr F 2026-10-31 10:11:29,232 INFO support_api.rag rag_ready sections=13 chunks=16 backend=openai_compatible model=openai/gpt-oss-20b startup_ms=6786
+2026-10-31T10:11:29.2332491Z stderr F INFO:     Application startup complete.
+2026-10-31T10:11:29.2344195Z stderr F INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-10-31T10:12:17.4086983Z stderr F 2026-10-31 10:12:17,408 INFO support_api.app ask_ok request_id=aef93da2f9d2 outcome=answered reason=grounded_answer question_chars=49 top_section=Returns and Refunds top_distance=0.7173 llm_called=True prompt_tokens=468 completion_tokens=96 retrieval_ms=82.8 generation_ms=756.9 total_ms=839.8
+2026-10-31T10:12:17.4097586Z stderr F 2026-10-31 10:12:17,409 INFO support_api.app request request_id=aef93da2f9d2 method=POST path=/ask status=200 latency_ms=848.6
+2026-10-31T10:12:17.4101319Z stdout F INFO:     100.100.0.67:45758 - "POST /ask HTTP/1.1" 200 OK
+2026-10-31T10:12:34.1023333Z stderr F 2026-10-31 10:12:34,102 INFO support_api.app request request_id=82078ab1bece method=GET path=/ status=200 latency_ms=0.9
+2026-10-31T10:12:34.1024658Z stdout F INFO:     100.100.0.113:53576 - "GET / HTTP/1.1" 200 OK
+
+# Wrong-key revision exp7-rag-api--0000003 (503 test) is deactivated, so its lines come from Log Analytics:
+$ az monitor log-analytics query -w <workspace-id> --analytics-query "ContainerAppConsoleLogs_CL | where RevisionName_s == 'exp7-rag-api--0000003' and Log_s has_any ('ask_failed','startup config','rag_ready')" -o tsv
+2026-10-31 10:09:21,564 INFO support_api.app startup config={'llm_backend': 'openai_compatible', 'llm_base_url': 'https://api.groq.com/openai/v1', 'llm_model': 'openai/gpt-oss-20b', 'api_key_configured': True, 'embedding_model': 'sentence-transformers/all-Mini
+
+2026-10-31 10:09:28,120 INFO support_api.rag rag_ready sections=13 chunks=16 backend=openai_compatible model=openai/gpt-oss-20b startup_ms=6214
+2026-10-31 10:10:20,878 ERROR support_api.app ask_failed request_id=b6cd0830c06a error_kind=authentication_failed upstream_status=401 question_chars=24 total_ms=74.2
+2026-10-31 10:10:24,446 ERROR support_api.app ask_failed request_id=5e896726be01 error_kind=authentication_failed upstream_status=401 question_chars=24 total_ms=28.0

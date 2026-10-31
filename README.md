@@ -122,3 +122,93 @@ Other OpenAI-compatible providers work by changing `LLM_BASE_URL`, `LLM_MODEL` a
 | log says `configuration_missing_api_key` | `LLM_API_KEY` is empty — create `.env` from `.env.example` |
 | `ModuleNotFoundError` | Virtual environment not activated, or `pip install -r requirements.txt` not run |
 | Port already in use | Another server is running — stop it (Ctrl+C) or use `--port 8001` |
+
+## Deployment (Experiment 8) — Azure Container Apps
+
+**Application URL:** https://exp7-rag-api.politefield-e1a38991.centralindia.azurecontainerapps.io
+(`/health`, `/docs`, `POST /ask`)
+
+| | |
+|---|---|
+| Platform | Azure Container Apps, environment `cae-exp7-rag-api` (WorkloadProfiles mode, Consumption profile) |
+| Region | Central India (`centralindia`) |
+| Resource group | `rg-exp7-rag-api` (registry, environment, app, one Log Analytics workspace) |
+| CPU / memory | 1.0 vCPU / 2 GiB per replica |
+| Scaling | 0 – 2 replicas (scales to zero after 300 s without traffic) |
+| Image | `acrexp7rag5973.azurecr.io/exp7-rag-api:v1`, 584.5 MB compressed, Basic-tier ACR |
+| Registry auth | system-assigned managed identity with `AcrPull` — the registry admin user is disabled, no password anywhere |
+| API key | stored only as the Container Apps secret `llm-api-key`; the container gets it as `LLM_API_KEY=secretref:llm-api-key` |
+
+### How the image is built
+
+The `Dockerfile` installs CPU-only PyTorch and `requirements.txt` on `python:3.11-slim`, and bakes the
+`all-MiniLM-L6-v2` embedding model into the image so a new replica does not download it at start-up.
+The plan was to build in the cloud with `az acr build`, but ACR Tasks are not permitted on
+**Azure for Students** subscriptions (`TasksOperationsNotAllowed`). The image is therefore built with local
+Docker and pushed with an Entra ID login (`az acr login`, no admin credentials).
+
+### Commands (key masked)
+
+```bash
+LOCATION=centralindia; RG=rg-exp7-rag-api; ACR=acrexp7rag5973; ENV_NAME=cae-exp7-rag-api; APP=exp7-rag-api
+
+az group create -n $RG -l $LOCATION
+az acr create -n $ACR -g $RG --sku Basic --admin-enabled false
+
+# image (az acr build is blocked on Azure for Students -> local build + push)
+docker build -t exp7-rag-api .
+az acr login -n $ACR
+docker tag exp7-rag-api $ACR.azurecr.io/exp7-rag-api:v1
+docker push $ACR.azurecr.io/exp7-rag-api:v1
+az acr repository show-tags -n $ACR --repository exp7-rag-api
+
+# environment: WorkloadProfiles mode (the default "Express" mode rejects managed-identity registry pull)
+az containerapp env create -n $ENV_NAME -g $RG -l $LOCATION --environment-mode WorkloadProfiles \
+  --logs-workspace-id <workspace customerId> --logs-workspace-key <workspace key>
+
+az containerapp create -n $APP -g $RG --environment $ENV_NAME \
+  --image $ACR.azurecr.io/exp7-rag-api:v1 \
+  --registry-server $ACR.azurecr.io --registry-identity system \
+  --target-port 8000 --ingress external \
+  --cpu 1.0 --memory 2.0Gi --min-replicas 0 --max-replicas 2 \
+  --env-vars LLM_BACKEND=openai_compatible LLM_BASE_URL=https://api.groq.com/openai/v1 LLM_MODEL=openai/gpt-oss-20b \
+             LLM_TIMEOUT_SECONDS=30 LLM_MAX_TOKENS=300 RAG_TOP_K=3 RAG_MAX_DISTANCE=1.5
+
+az containerapp secret set -n $APP -g $RG --secrets llm-api-key=gsk_****
+az containerapp update -n $APP -g $RG --set-env-vars LLM_API_KEY=secretref:llm-api-key
+URL=https://$(az containerapp show -n $APP -g $RG --query properties.configuration.ingress.fqdn -o tsv)
+
+# verification
+python test_api.py $URL
+az containerapp logs show -n $APP -g $RG --type console --tail 100
+```
+
+### Results (measured 2026-10-31)
+
+| Check | HTTP | Result | Server ms | Client ms |
+|---|---|---|---|---|
+| Cold start — first `GET /health` with 0 replicas | 200 | `index_ready: true`, 16 chunks | — | **28,114** |
+| Warm `GET /health` (5 calls) | 200 | `status: ok` | 0.7 – 1.2 | 47 – 58 |
+| `/ask` "How many days do I have to return an unused item?" | 200 | `answered` — 15 days (retrieval 17.8 ms, generation 526.9 ms) | 547.8 | 618.9 |
+| `/ask` "Do you sell car insurance?" | 200 | `insufficient_information` (LLM not called) | 10.2 | 116.9 |
+| `/ask` empty question | 422 | `invalid_request` | 1.0 | 79.8 |
+| `/ask` 1,001-character question | 422 | `invalid_request` | 1.0 | 102.9 |
+| `/ask` with a wrong key (temporary revision) | 503 | `backend_unavailable`; log: `authentication_failed upstream_status=401` | 77.2 | 154.5 |
+| `python test_api.py $URL` | — | **5 / 5 PASS** | — | — |
+
+Full measurements, logs, revision list and the screenshot list: [`docs/EXP8_RESULTS.md`](docs/EXP8_RESULTS.md).
+Screenshots: [`docs/screenshots/`](docs/screenshots/) (regenerate with `scripts/exp8_screenshots.py`).
+
+**Cost / clean-up:** with 0 replicas there is no compute charge; the standing cost is the Basic container
+registry (about US$5 / month). Delete everything with `az group delete -n rg-exp7-rag-api --yes`.
+
+## Experiment 8 progress
+
+- [x] Phase 0 — Preconditions (Azure CLI, subscription, containerapp extension, providers, local mock run)
+- [x] Phase 1 — Dockerfile and .dockerignore (local Docker build + run)
+- [x] Phase 2 — Resource group, ACR (Basic) and image (`az acr build` blocked on Azure for Students → local build + push)
+- [x] Phase 3 — Container Apps environment, app with managed-identity pull, Groq key as secret
+- [x] Phase 4 — Cloud verification (health, /ask 200/insufficient/422/503, test_api.py, logs)
+- [x] Phase 5 — Screenshots (Playwright + rendered terminal output; GitHub README shot after push; portal shots by hand)
+- [x] Phase 6 — Documentation and push
+- [ ] Phase 7 — Hand-off
