@@ -211,4 +211,4 @@ registry (about US$5 / month). Delete everything with `az group delete -n rg-exp
 - [x] Phase 4 — Cloud verification (health, /ask 200/insufficient/422/503, test_api.py, logs)
 - [x] Phase 5 — Screenshots (Playwright + rendered terminal output; GitHub README shot after push; portal shots by hand)
 - [x] Phase 6 — Documentation and push
-- [ ] Phase 7 — Hand-off
+- [x] Phase 7 — Hand-off

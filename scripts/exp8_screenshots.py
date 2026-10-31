@@ -88,8 +88,8 @@ def shot_github(page: Page, repo_url: str) -> None:
     page.goto(repo_url, wait_until="domcontentloaded")
     anchor = page.locator("h2:has-text('Deployment (Experiment 8)')").first
     anchor.wait_for(timeout=60_000)
-    anchor.scroll_into_view_if_needed()
-    page.evaluate("window.scrollBy(0, -40)")
+    page.wait_for_timeout(2000)          # let GitHub finish its own scroll restoration first
+    anchor.evaluate("el => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 40)")
     page.wait_for_timeout(800)
     add_caption(page, repo_url)
     page.screenshot(path=str(OUT / "github_readme_exp8.png"))
